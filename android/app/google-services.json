@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "620179221541",
+    "project_id": "vencemio-a4759",
+    "storage_bucket": "vencemio-a4759.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620179221541:android:6f68fa40cac87d8ea963cc",
+        "android_client_info": {
+          "package_name": "com.example.vencemio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620179221541-i5m03ve8jbitqhns417356u674eu35un.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzpTnYoB9h48E4O0UYI9ch6nNTxh4Ro8c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "620179221541-i5m03ve8jbitqhns417356u674eu35un.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620179221541:android:cd52c0ecae69b20ca963cc",
+        "android_client_info": {
+          "package_name": "com.vencemiofront"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620179221541-i5m03ve8jbitqhns417356u674eu35un.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzpTnYoB9h48E4O0UYI9ch6nNTxh4Ro8c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "620179221541-i5m03ve8jbitqhns417356u674eu35un.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
