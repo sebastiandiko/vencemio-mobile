@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:vencemio/src/home.dart';
-import 'package:vencemio/src/registro.dart';
-import 'package:http/http.dart' as http;
+import 'home.dart';
+import 'registro.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -30,14 +30,9 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       final String firebaseUserId = userCredential.user?.uid ?? '';
-      print("Usuario autenticado con Firebase UID: $firebaseUserId");
-
       final String collectionId = await _fetchCollectionId(firebaseUserId);
-      print("ID de la colección en Firestore: $collectionId");
-
       final List<String> userPreferences =
           await _fetchUserPreferences(collectionId);
-      print("Preferencias obtenidas: $userPreferences");
 
       Navigator.pushReplacement(
         context,
@@ -50,12 +45,10 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _errorMessage = e.message ?? 'Error desconocido al iniciar sesión.';
       });
-      print("Error de FirebaseAuth: $e");
     } catch (e) {
       setState(() {
         _errorMessage = 'Error al iniciar sesión: $e';
       });
-      print("Error general: $e");
     }
   }
 
@@ -79,20 +72,13 @@ class _LoginPageState extends State<LoginPage> {
   Future<List<String>> _fetchUserPreferences(String collectionId) async {
     final String url = 'http://10.0.2.2:5000/api/users/$collectionId/preferences';
 
-    print("Llamando a la API para obtener preferencias: $url");
-
     try {
       final response = await http.get(Uri.parse(url));
-
-      print("Estado de la respuesta de la API: ${response.statusCode}");
-      print("Cuerpo de la respuesta de la API: ${response.body}");
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return (data['preferences'] as List<dynamic>).cast<String>();
       } else {
-        throw Exception(
-            'Error al obtener preferencias: ${response.statusCode}');
+        throw Exception('Error al obtener preferencias: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error al conectar con la API: $e');
@@ -102,152 +88,132 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Fondo con gradiente e imagen
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFF5CC), Color.fromARGB(255, 200, 245, 176)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              image: DecorationImage(
-                image: AssetImage('assets/logoFondo.png'),
-                fit: BoxFit.cover,
-                opacity: 0.2,
-              ),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF76c043), Color(0xFF1c802d)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 150,
-                      child: Image.asset(
-                        'assets/client.png',
-                        fit: BoxFit.contain,
-                      ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  SizedBox(
+                    height: 120,
+                    child: Image.asset('assets/client.png'),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Tarjeta del Formulario
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Iniciar Sesión",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1c802d),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _emailController,
-                            decoration: InputDecoration(
-                              labelText: "Email",
-                              prefixIcon: const Icon(Icons.email,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Campo Email
+                        TextField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: "Correo Electrónico",
+                            prefixIcon: const Icon(Icons.email, color: Colors.green),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelText: "Contraseña",
-                              prefixIcon: const Icon(Icons.lock,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Campo Contraseña
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Contraseña",
+                            prefixIcon: const Icon(Icons.lock, color: Colors.green),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Error Message
+                        if (_errorMessage.isNotEmpty)
+                          Text(
+                            _errorMessage,
+                            style: const TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+
+                        const SizedBox(height: 20),
+
+                        // Botón Login
+                        Center(
+                          child: ElevatedButton(
                             onPressed: _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF76c043),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 50,
-                                vertical: 15,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             child: const Text(
                               "Iniciar Sesión",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
+                              style: TextStyle(fontSize: 16, color: Colors.white),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          if (_errorMessage.isNotEmpty)
-                            Text(
-                              _errorMessage,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const RegistroPage(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "¿No tienes cuenta? Regístrate",
-                              style: TextStyle(
-                                color: Color(0xFF1c802d),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Registro
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RegistroPage()),
+                      );
+                    },
+                    child: const Text(
+                      "¿No tienes cuenta? Regístrate",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

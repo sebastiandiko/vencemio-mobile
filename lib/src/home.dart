@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:vencemio/src/login.dart';
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart'; // Para cerrar sesión
 
 import 'user_preferences.dart';
-import 'map_page.dart'; // Asegúrate de importar tu clase MapPage
+import 'map_page.dart';
+import 'purchasepage.dart';
 
 class HomePage extends StatefulWidget {
   final List<String> userPreferences;
-  final String userId; // ID del usuario
+  final String userId;
 
   const HomePage({Key? key, required this.userPreferences, required this.userId}) : super(key: key);
 
@@ -49,11 +50,9 @@ class _HomePageState extends State<HomePage> {
     try {
       String url = "$_baseUrl/productos";
 
-      if (_selectedCategory != "Todos" && _selectedSupermarket != "Todos") {
-        url += "/byCategory/${_selectedCategory!}/byCodSuper/${_selectedSupermarket!}";
-      } else if (_selectedCategory != "Todos") {
+      if (_selectedCategory != "Todos" && _selectedSupermarket == "Todos") {
         url += "/byCategory/${_selectedCategory!}";
-      } else if (_selectedSupermarket != "Todos") {
+      } else if (_selectedSupermarket != "Todos" && _selectedCategory == "Todos") {
         url += "/byCodSuper/${_selectedSupermarket!}";
       }
 
@@ -83,15 +82,127 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _formatExpirationDate(String? fechaVencimiento) {
-    if (fechaVencimiento == null) return "Sin fecha";
-    final date = DateTime.parse(fechaVencimiento);
-    return "${date.day}/${date.month}/${date.year}";
+  void _resetCategory() {
+    setState(() {
+      _selectedCategory = "Todos";
+      _fetchProducts();
+    });
   }
 
-  void _logout() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.popUntil(context, ModalRoute.withName('/')); // Redirige al login
+  void _resetSupermarket() {
+    setState(() {
+      _selectedSupermarket = "Todos";
+      _fetchProducts();
+    });
+  }
+
+void _logout() {
+  // Lógica para cerrar sesión (puedes limpiar sesión, tokens, etc.)
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (context) => const LoginPage()), // Página de Login
+    (Route<dynamic> route) => false, // Elimina todas las rutas anteriores
+  );
+
+  // Mostrar mensaje de cierre de sesión
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Sesión cerrada exitosamente."),
+      duration: Duration(seconds: 2),
+    ),
+  );
+}
+
+  Widget _buildProductCard(product) {
+    final originalPrice = double.tryParse(product['precio']?.toString() ?? '0') ?? 0;
+    final discountPrice = double.tryParse(product['precio_descuento']?.toString() ?? '0') ?? 0;
+    final discountPercent = ((1 - (discountPrice / originalPrice)) * 100).toStringAsFixed(0);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Image.network(
+                  product['imagen'] ?? '',
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              if (discountPrice < originalPrice)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "$discountPercent% OFF",
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product['nombre'] ?? "Sin nombre",
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Text(
+                      "\$${originalPrice.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                          decoration: TextDecoration.lineThrough, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "\$${discountPrice.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                          color: Colors.green, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PurchasePage(product: product),
+                      ),
+                    );
+                  },
+                  child: const Text("Comprar", style: TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -100,178 +211,85 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("Catálogo de Productos"),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 0, 164, 44),
-        leading: IconButton(
-          icon: const Icon(Icons.settings), // Ícono de preferencias
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserPreferencesPage(userId: widget.userId),
-              ),
-            );
-          },
-        ),
+        backgroundColor: Colors.green,
         actions: [
           IconButton(
-            icon: const Icon(Icons.map), // Ícono de mapa
+            icon: const Icon(Icons.map),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const MapPage()));
+            },
+            tooltip: "Ver Mapa",
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const MapPage(),
+                  builder: (context) => UserPreferencesPage(userId: widget.userId),
                 ),
               );
             },
+            tooltip: "Preferencias",
           ),
           IconButton(
-            icon: const Icon(Icons.logout), // Ícono de salir
+            icon: const Icon(Icons.logout),
             onPressed: _logout,
+            tooltip: "Cerrar Sesión",
           ),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    DropdownButton<String>(
-                      value: _selectedCategory,
-                      items: _categories.map((String category) {
-                        return DropdownMenuItem<String>(
-                          value: category,
-                          child: Text(category),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCategory = value;
-                        });
-                        _fetchProducts();
-                      },
-                      icon: const Icon(Icons.arrow_drop_down),
-                      style: const TextStyle(color: Color.fromARGB(255, 2, 161, 71)),
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedSupermarket,
-                      items: _supermarkets.map((String supermarket) {
-                        return DropdownMenuItem<String>(
-                          value: supermarket,
-                          child: Text(supermarket),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedSupermarket = value;
-                        });
-                        _fetchProducts();
-                      },
-                      icon: const Icon(Icons.arrow_drop_down),
-                      style: const TextStyle(color: Colors.teal),
-                    ),
-                  ],
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                DropdownButton<String>(
+                  value: _selectedCategory,
+                  items: _categories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCategory = value;
+                      _resetSupermarket(); // Reinicia el filtro de supermercado
+                    });
+                  },
                 ),
-              ),
+                DropdownButton<String>(
+                  value: _selectedSupermarket,
+                  items: _supermarkets.map((String market) {
+                    return DropdownMenuItem<String>(
+                      value: market,
+                      child: Text(market),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedSupermarket = value;
+                      _resetCategory(); // Reinicia el filtro de categoría
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        CircularProgressIndicator(color: Colors.teal),
-                        SizedBox(height: 16),
-                        Text("Cargando productos...", style: TextStyle(color: Colors.teal)),
-                      ],
-                    ),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : _errorMessage.isNotEmpty
                     ? Center(
-                        child: Text(
-                          _errorMessage,
-                          style: const TextStyle(color: Colors.red, fontSize: 16),
-                        ),
+                        child: Text(_errorMessage,
+                            style: const TextStyle(color: Colors.red, fontSize: 16)),
                       )
                     : ListView.builder(
                         itemCount: _products.length,
-                        itemBuilder: (context, index) {
-                          final product = _products[index];
-                          final originalPrice = double.tryParse(product['precio']?.toString() ?? '0') ?? 0;
-                          final discountPrice = double.tryParse(product['precio_descuento']?.toString() ?? '0') ?? 0;
-                          final discountPercent = ((1 - (discountPrice / originalPrice)) * 100).toStringAsFixed(2);
-
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 4,
-                            color: const Color.fromARGB(255, 232, 243, 231),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: product['imagen'] != null && product['imagen'].isNotEmpty
-                                        ? Image.network(
-                                            product['imagen'],
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : const Icon(Icons.image_not_supported, size: 80),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          product['nombre'] ?? "Sin nombre",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Antes: \$${originalPrice.toStringAsFixed(2)}",
-                                          style: const TextStyle(
-                                            decoration: TextDecoration.lineThrough,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Ahora: \$${discountPrice.toStringAsFixed(2)}",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Color.fromARGB(255, 0, 110, 11),
-                                          ),
-                                        ),
-                                        Text(
-                                          "${discountPercent}% OFF",
-                                          style: const TextStyle(color: Color.fromARGB(255, 0, 155, 23)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                        itemBuilder: (context, index) => _buildProductCard(_products[index]),
                       ),
           ),
         ],

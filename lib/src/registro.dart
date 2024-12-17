@@ -50,8 +50,6 @@ class _RegistroPageState extends State<RegistroPage> {
       );
 
       final String firebaseUserId = userCredential.user?.uid ?? '';
-      print("Firebase UID del usuario: $firebaseUserId");
-
       final userDoc = await _firestore.collection('users').add({
         'nombre': _nameController.text.trim(),
         'apellido': _lastNameController.text.trim(),
@@ -63,7 +61,6 @@ class _RegistroPageState extends State<RegistroPage> {
       });
 
       final String firestoreDocumentId = userDoc.id;
-      print("Usuario creado en Firestore con ID: $firestoreDocumentId");
 
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -79,14 +76,7 @@ class _RegistroPageState extends State<RegistroPage> {
 
       final responseData = jsonDecode(response.body);
 
-      print("Estado de la respuesta de la API: ${response.statusCode}");
-      print("Cuerpo de la respuesta de la API: ${response.body}");
-
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          response.statusCode == 400) {
-        print("Registro exitoso en la API: ${responseData['message']}");
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -99,199 +89,152 @@ class _RegistroPageState extends State<RegistroPage> {
         setState(() {
           _errorMessage = responseData['message'] ?? 'Error al registrarse.';
         });
-        print("Mensaje de la API: ${responseData['message']}");
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al conectar con el servidor o Firebase: $e';
+        _errorMessage = 'Error al registrar: $e';
       });
-      print("Error de conexión: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Fondo con gradiente e imagen
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFF5CC), Color.fromARGB(255, 200, 245, 176)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              image: DecorationImage(
-                image: AssetImage('assets/logoFondo.png'),
-                fit: BoxFit.cover,
-                opacity: 0.2,
-              ),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF76c043), Color(0xFF1c802d)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 150,
-                      child: Image.asset(
-                        'assets/register.png',
-                        fit: BoxFit.contain,
-                      ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  SizedBox(
+                    height: 120,
+                    child: Image.asset('assets/register.png'),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Tarjeta del formulario
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Registro",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1c802d),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: "Nombre",
-                              prefixIcon: const Icon(Icons.person,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            controller: _lastNameController,
-                            decoration: InputDecoration(
-                              labelText: "Apellido",
-                              prefixIcon: const Icon(Icons.person_outline,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            controller: _emailController,
-                            decoration: InputDecoration(
-                              labelText: "Email",
-                              prefixIcon: const Icon(Icons.email,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelText: "Contraseña",
-                              prefixIcon: const Icon(Icons.lock,
-                                  color: Color(0xFF1c802d)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF76c043)),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xFFfcc40b), width: 2),
-                              ),
-                              labelStyle:
-                                  const TextStyle(color: Color(0xFF1c802d)),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Nombre
+                        _buildInputField("Nombre", Icons.person, _nameController),
+                        const SizedBox(height: 12),
+
+                        // Apellido
+                        _buildInputField("Apellido", Icons.person_outline,
+                            _lastNameController),
+                        const SizedBox(height: 12),
+
+                        // Email
+                        _buildInputField(
+                            "Correo Electrónico", Icons.email, _emailController),
+                        const SizedBox(height: 12),
+
+                        // Contraseña
+                        _buildInputField(
+                            "Contraseña", Icons.lock, _passwordController,
+                            obscureText: true),
+                        const SizedBox(height: 16),
+
+                        // Botón Registrarse
+                        Center(
+                          child: ElevatedButton(
                             onPressed: _register,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF76c043),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 50,
-                                vertical: 15,
-                              ),
+                                  horizontal: 50, vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             child: const Text(
                               "Registrarse",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
+                              style: TextStyle(fontSize: 16, color: Colors.white),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          if (_errorMessage.isNotEmpty)
-                            Text(
+                        ),
+
+                        if (_errorMessage.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
                               _errorMessage,
                               style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              "¿Ya tienes cuenta? Inicia sesión",
-                              style: TextStyle(
-                                color: Color(0xFF1c802d),
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  color: Colors.red, fontSize: 14),
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Botón para ir a Iniciar Sesión
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      "¿Ya tienes cuenta? Inicia sesión",
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(String label, IconData icon,
+      TextEditingController controller,
+      {bool obscureText = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.green),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }

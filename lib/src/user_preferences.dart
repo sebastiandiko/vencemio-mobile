@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'home.dart'; // Importa la pantalla HomePage
+import 'home.dart';
 
 class UserPreferencesPage extends StatefulWidget {
-  final String userId; // ID del usuario para interactuar con el backend
+  final String userId;
 
   const UserPreferencesPage({Key? key, required this.userId}) : super(key: key);
 
@@ -22,22 +22,17 @@ class _UserPreferencesPageState extends State<UserPreferencesPage> {
     {'name': 'Enlatados', 'icon': 'assets/enlatados.png'},
     {'name': 'Mascotas', 'icon': 'assets/mascotas.png'},
   ];
+
   final List<String> _selectedCategories = [];
   bool _isSaving = false;
 
   Future<void> _savePreferences() async {
     if (_selectedCategories.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor selecciona al menos una categoría.'),
-        ),
-      );
+      _showSnackBar('Por favor selecciona al menos una categoría.');
       return;
     }
 
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
 
     final String apiUrl =
         'http://10.0.2.2:5000/api/users/${widget.userId}/preferences';
@@ -50,10 +45,7 @@ class _UserPreferencesPageState extends State<UserPreferencesPage> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preferencias guardadas con éxito.')),
-        );
-
+        _showSnackBar('Preferencias guardadas con éxito.');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -64,158 +56,152 @@ class _UserPreferencesPageState extends State<UserPreferencesPage> {
           ),
         );
       } else {
-        final errorMessage =
-            jsonDecode(response.body)['message'] ?? 'Error desconocido.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar preferencias: $errorMessage')),
-        );
+        _showSnackBar('Error: ${response.statusCode}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de conexión: $e')),
-      );
+      _showSnackBar('Error de conexión: $e');
     } finally {
-      setState(() {
-        _isSaving = false;
-      });
+      setState(() => _isSaving = false);
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Widget _buildCategoryCard(Map<String, String> category, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedCategories.remove(category['name']);
+          } else if (_selectedCategories.length < 3) {
+            _selectedCategories.add(category['name']!);
+          } else {
+            _showSnackBar('Solo puedes seleccionar hasta 3 categorías.');
+          }
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFF76c043), Color(0xFF1c802d)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFFe0f7fa), Color(0xFFffffff)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              spreadRadius: 1,
+              blurRadius: isSelected ? 10 : 6,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: Colors.white,
+              backgroundImage: AssetImage(category['icon']!),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              category['name']!,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedCounter() {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF76c043),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        "Seleccionadas: ${_selectedCategories.length} / 3",
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1c802d),
+        title: const Text(
+          "Configurar Preferencias",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 4,
+      ),
+      body: Column(
         children: [
-          // Fondo con gradiente
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFF5CC), Color.fromARGB(255, 191, 255, 200)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+          _buildSelectedCounter(),
+          const SizedBox(height: 10),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
               ),
-              image: DecorationImage(
-                image: AssetImage('assets/LogoVencemio.png'),
-                fit: BoxFit.cover,
-                opacity: 0.2,
-              ),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected =
+                    _selectedCategories.contains(category['name']);
+                return _buildCategoryCard(category, isSelected);
+              },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Selecciona hasta 3 categorías:",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1c802d),
-                  ),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _savePreferences,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1c802d),
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 20,
-                      crossAxisSpacing: 20,
+              ),
+              child: _isSaving
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      "Guardar Preferencias",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final category = _categories[index];
-                      final isSelected =
-                          _selectedCategories.contains(category['name']);
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              _selectedCategories.remove(category['name']);
-                            } else if (_selectedCategories.length < 3) {
-                              _selectedCategories.add(category['name']!);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Solo puedes seleccionar hasta 3 categorías.'),
-                                ),
-                              );
-                            }
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFF76c043)
-                                : Colors.white,
-                            border: Border.all(
-                              color: isSelected
-                                  ? const Color(0xFFfcc40b)
-                                  : const Color(0xFF76c043),
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircleAvatar(
-                                radius: 40,
-                                backgroundImage: AssetImage(category['icon']!),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                category['name']!,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : const Color(0xFF1c802d),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ElevatedButton(
-                    onPressed: _isSaving ? null : _savePreferences,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF76c043),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20, // Aumenta el padding vertical
-                        horizontal: 40, // Aumenta el padding horizontal
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: _isSaving
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : const Text(
-                            "Guardar y Continuar",
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
