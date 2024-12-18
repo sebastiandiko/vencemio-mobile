@@ -14,10 +14,11 @@ class UserPreferencesPage extends StatefulWidget {
 
 class _UserPreferencesPageState extends State<UserPreferencesPage> {
   final List<Map<String, String>> _categories = [
-    {'name': 'Vegetales', 'icon': 'assets/vegetales.png'},
+    {'name': 'Verduras', 'icon': 'assets/verduras.jpg'},
+    {'name': 'Frutas', 'icon': 'assets/frutas.jpg'},
     {'name': 'Limpieza', 'icon': 'assets/limpieza.png'},
     {'name': 'Bebidas', 'icon': 'assets/bebidas.png'},
-    {'name': 'Lácteos', 'icon': 'assets/lacteos.png'},
+    {'name': 'Lacteos', 'icon': 'assets/lacteos.png'},
     {'name': 'Panadería', 'icon': 'assets/panaderia.jpg'},
     {'name': 'Enlatados', 'icon': 'assets/enlatados.png'},
     {'name': 'Mascotas', 'icon': 'assets/mascotas.png'},
