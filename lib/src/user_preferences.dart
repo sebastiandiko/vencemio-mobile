@@ -36,7 +36,7 @@ class _UserPreferencesPageState extends State<UserPreferencesPage> {
     setState(() => _isSaving = true);
 
     final String apiUrl =
-        'http://10.0.2.2:5000/api/users/${widget.userId}/preferences';
+        'https://vencemio-api.vercel.app/api/users/${widget.userId}/preferences';
 
     try {
       final response = await http.put(

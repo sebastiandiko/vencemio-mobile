@@ -23,7 +23,7 @@ class _ApiTestPageState extends State<ApiTestPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://10.0.2.2:5000/api/productos/byCategory/Lacteos"), // Cambia la URL si usas un dispositivo físico
+        Uri.parse("https://vencemio-api.vercel.app/api/productos/byCategory/Lacteos"), // Cambia la URL si usas un dispositivo físico
       );
 
       if (response.statusCode == 200) {

@@ -33,7 +33,7 @@ class _NotificationConfigPageState extends State<NotificationConfigPage> {
 
   // Método para obtener productos desde la API
   Future<void> _fetchProducts() async {
-    const String endpoint = "http://10.0.2.2:5000/api/productos"; // Endpoint de tu API
+    const String endpoint = "https://vencemio-api.vercel.app/api/productos"; // Endpoint de tu API
     setState(() {
       _isLoading = true;
     });

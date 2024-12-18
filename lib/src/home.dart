@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:vencemio/src/login.dart';
+import 'package:vencemio/src/botpresschatpage.dart'; // Importa la página del chat de Botpress
 import 'dart:convert';
-
 import 'user_preferences.dart';
 import 'map_page.dart';
 import 'purchasepage.dart';
@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  final String _baseUrl = "http://10.0.2.2:5000/api";
+  final String _baseUrl = "https://vencemio-api.vercel.app/api";
 
   @override
   void initState() {
@@ -96,21 +96,19 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-void _logout() {
-  // Lógica para cerrar sesión (puedes limpiar sesión, tokens, etc.)
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (context) => const LoginPage()), // Página de Login
-    (Route<dynamic> route) => false, // Elimina todas las rutas anteriores
-  );
+  void _logout() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (Route<dynamic> route) => false,
+    );
 
-  // Mostrar mensaje de cierre de sesión
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Sesión cerrada exitosamente."),
-      duration: Duration(seconds: 2),
-    ),
-  );
-}
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Sesión cerrada exitosamente."),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   Widget _buildProductCard(product) {
     final originalPrice = double.tryParse(product['precio']?.toString() ?? '0') ?? 0;
@@ -145,7 +143,7 @@ void _logout() {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent,
+                      color: const Color(0xFFFF5252),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -257,7 +255,7 @@ void _logout() {
                   onChanged: (value) {
                     setState(() {
                       _selectedCategory = value;
-                      _resetSupermarket(); // Reinicia el filtro de supermercado
+                      _resetSupermarket();
                     });
                   },
                 ),
@@ -272,7 +270,7 @@ void _logout() {
                   onChanged: (value) {
                     setState(() {
                       _selectedSupermarket = value;
-                      _resetCategory(); // Reinicia el filtro de categoría
+                      _resetCategory();
                     });
                   },
                 ),
@@ -293,6 +291,17 @@ void _logout() {
                       ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BotpressChat()),
+          );
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.chat),
+        tooltip: "Hablar con el Bot",
       ),
     );
   }

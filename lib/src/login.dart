@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<List<String>> _fetchUserPreferences(String collectionId) async {
-    final String url = 'http://10.0.2.2:5000/api/users/$collectionId/preferences';
+    final String url = 'https://vencemio-api.vercel.app/api/users/$collectionId/preferences';
 
     try {
       final response = await http.get(Uri.parse(url));

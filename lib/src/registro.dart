@@ -23,7 +23,7 @@ class _RegistroPageState extends State<RegistroPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _register() async {
-    final String apiUrl = 'http://10.0.2.2:5000/api/users/register';
+    final String apiUrl = 'https://vencemio-api.vercel.app/api/users/register';
 
     if (_nameController.text.isEmpty ||
         _lastNameController.text.isEmpty ||

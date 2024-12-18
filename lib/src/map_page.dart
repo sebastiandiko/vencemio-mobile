@@ -88,7 +88,7 @@ Future<void> _determinePosition() async {
 
   // Método para obtener datos de supermercados desde el endpoint
   Future<void> _fetchSupermarkets() async {
-    const url = "http://10.0.2.2:5000/api/superusers"; // URL base para obtener supermercados
+    const url = "https://vencemio-api.vercel.app/api/superusers"; // URL base para obtener supermercados
     print("Solicitando datos de supermercados desde $url...");
 
     try {

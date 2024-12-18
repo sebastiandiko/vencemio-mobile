@@ -25,7 +25,7 @@ class _PurchasePageState extends State<PurchasePage> {
       _isLoading = true;
     });
 
-    final url = "http://10.0.2.2:5000/api/ventas"; // Endpoint de la API
+    final url = "https://vencemio-api.vercel.app/api/ventas"; // Endpoint de la API
 
     final discountPrice =
         double.tryParse(widget.product['precio_descuento'].toString()) ?? 0;
