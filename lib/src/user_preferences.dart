@@ -22,6 +22,8 @@ class _UserPreferencesPageState extends State<UserPreferencesPage> {
     {'name': 'Panadería', 'icon': 'assets/panaderia.jpg'},
     {'name': 'Enlatados', 'icon': 'assets/enlatados.png'},
     {'name': 'Mascotas', 'icon': 'assets/mascotas.png'},
+    {'name': 'Pastas', 'icon': 'assets/pastas.jpg'},
+    {'name': 'Snacks', 'icon': 'assets/snacks.png'}
   ];
 
   final List<String> _selectedCategories = [];

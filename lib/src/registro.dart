@@ -22,80 +22,111 @@ class _RegistroPageState extends State<RegistroPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> _register() async {
-    final String apiUrl = 'https://vencemio-api.vercel.app/api/users/register';
+ Future<void> _register() async {
+  final String apiUrl = 'https://vencemio-api.vercel.app/api/users/register';
 
-    if (_nameController.text.isEmpty ||
-        _lastNameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Por favor, completa todos los campos.';
-      });
-      return;
-    }
+  if (_nameController.text.isEmpty ||
+      _lastNameController.text.isEmpty ||
+      _emailController.text.isEmpty ||
+      _passwordController.text.isEmpty) {
+    setState(() {
+      _errorMessage = 'Por favor, completa todos los campos.';
+    });
+    return;
+  }
 
-    if (!_emailController.text.contains('@')) {
-      setState(() {
-        _errorMessage = 'Por favor, ingresa un correo válido.';
-      });
-      return;
-    }
+  if (!_emailController.text.contains('@')) {
+    setState(() {
+      _errorMessage = 'Por favor, ingresa un correo válido.';
+    });
+    return;
+  }
 
-    try {
-      final UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      final String firebaseUserId = userCredential.user?.uid ?? '';
-      final userDoc = await _firestore.collection('users').add({
+  try {
+    // Paso 1: Validar y registrar en el backend
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
         'nombre': _nameController.text.trim(),
         'apellido': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
         'password': _passwordController.text.trim(),
-        'fecha_registro': DateTime.now().toIso8601String(),
-        'uid': firebaseUserId,
-        'preference': ["", "", ""],
-      });
+      }),
+    );
 
-      final String firestoreDocumentId = userDoc.id;
-
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'nombre': _nameController.text.trim(),
-          'apellido': _lastNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text.trim(),
-          'uid': firebaseUserId,
-        }),
-      );
-
+    if (response.statusCode != 200 && response.statusCode != 201) {
       final responseData = jsonDecode(response.body);
+      setState(() {
+        _errorMessage = responseData['message'] ?? 'Error al registrarse.';
+      });
+      return;
+    }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+    final responseData = jsonDecode(response.body);
+
+    // Paso 2: Crear el usuario en Firebase Authentication
+    final UserCredential userCredential =
+        await _auth.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    final String firebaseUserId = userCredential.user?.uid ?? '';
+
+    // Paso 3: Crear el documento en Firestore
+    final userDoc = await _firestore.collection('users').add({
+      'nombre': _nameController.text.trim(),
+      'apellido': _lastNameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text.trim(),
+      'fecha_registro': DateTime.now().toIso8601String(),
+      'uid': firebaseUserId,
+      'preference': ["", "", ""],
+    });
+
+    final String firestoreDocumentId = userDoc.id;
+
+    // Redirigir a la página de preferencias
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserPreferencesPage(userId: firestoreDocumentId),
+      ),
+    );
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'email-already-in-use') {
+      // Si ya está registrado en Firebase, verifica en Firestore
+      final existingUser = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: _emailController.text.trim())
+          .get();
+
+      if (existingUser.docs.isNotEmpty) {
+        final String existingDocId = existingUser.docs.first.id;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                UserPreferencesPage(userId: firestoreDocumentId),
+            builder: (context) => UserPreferencesPage(userId: existingDocId),
           ),
         );
       } else {
-        await _firestore.collection('users').doc(firestoreDocumentId).delete();
         setState(() {
-          _errorMessage = responseData['message'] ?? 'Error al registrarse.';
+          _errorMessage =
+              'El correo ya está en uso, pero no encontramos un usuario asociado.';
         });
       }
-    } catch (e) {
+    } else {
       setState(() {
-        _errorMessage = 'Error al registrar: $e';
+        _errorMessage = 'Error al registrar: ${e.message}';
       });
     }
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Error al registrar: $e';
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

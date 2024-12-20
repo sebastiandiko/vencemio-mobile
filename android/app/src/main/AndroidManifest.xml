@@ -7,7 +7,7 @@
 
 
     <application
-        android:label="vencemio"
+        android:label="Vencemio"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
